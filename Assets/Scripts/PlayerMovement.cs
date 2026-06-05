@@ -6,6 +6,7 @@ public class PlayerMovement : MonoBehaviour
 
     Rigidbody rb;
     public float moveSpeed = 5f;
+    public float turnSpeed = 720f;
     float moveHorizontal;
     float moveForward;
 
@@ -23,13 +24,12 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true; //prevents player from tipping over when colliding with objects
+        rb.freezeRotation = true;
 
         playerHeight = GetComponent<CapsuleCollider>().height * transform.localScale.y;
         raycastDistance = (playerHeight / 2) + 0.2f;
 
     }
-
     void Awake()
     {
         inputActions = new InputSystem_Actions();
@@ -66,13 +66,19 @@ public class PlayerMovement : MonoBehaviour
 
     void MovePlayer()
     {
-        Vector3 movement = (transform.right * moveHorizontal + transform.forward * moveForward).normalized;
+        Vector3 movement = new Vector3(moveHorizontal, 0, moveForward).normalized;
         Vector3 targetVelocity = movement * moveSpeed;
 
         Vector3 velocity = rb.linearVelocity;
         velocity.x = targetVelocity.x;
         velocity.z = targetVelocity.z;
         rb.linearVelocity = velocity;
+
+        if (movement != Vector3.zero)
+        {
+            Quaternion toRotation = Quaternion.LookRotation(movement, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, turnSpeed * Time.deltaTime);
+        }
 
         // prevent sliding if not moving
         if (isGrounded && moveHorizontal == 0 && moveForward == 0)
