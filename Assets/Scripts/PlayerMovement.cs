@@ -1,10 +1,11 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour, IPossessable
 {
 
     Rigidbody rb;
+    public GameObject boatObject;
     public float moveSpeed = 5f;
     public float turnSpeed = 720f;
     float moveHorizontal;
@@ -19,7 +20,6 @@ public class PlayerMovement : MonoBehaviour
     float groundCheckDelay = 0.3f;
     float playerHeight;
     float raycastDistance;
-    InputSystem_Actions inputActions;
 
     void Start()
     {
@@ -30,23 +30,9 @@ public class PlayerMovement : MonoBehaviour
         raycastDistance = (playerHeight / 2) + 0.2f;
 
     }
-    void Awake()
-    {
-        inputActions = new InputSystem_Actions();
-        inputActions.Player.Enable();
-    }
 
     void Update()
     {
-        Vector2 moveInput = inputActions.Player.Move.ReadValue<Vector2>();
-        moveHorizontal = moveInput.x;
-        moveForward = moveInput.y;
-
-        if (inputActions.Player.Jump.triggered && isGrounded)
-        {
-            Jump();
-        }
-
         if (!isGrounded && groundCheckTimer <= 0f)
         {
             Vector3 rayOrigin = transform.position + Vector3.up * 0.1f;
@@ -87,8 +73,15 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void Jump()
+    public void Move(Vector2 input)
     {
+        moveForward = input.y;
+        moveHorizontal = input.x;
+    }
+
+    public void Jump()
+    {
+        if(!isGrounded) return;
         isGrounded = false;
         groundCheckTimer = groundCheckDelay;
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
@@ -104,5 +97,20 @@ public class PlayerMovement : MonoBehaviour
         {
             rb.linearVelocity += Vector3.up * Physics.gravity.y * upMultiplier * Time.fixedDeltaTime;
         }
+    }
+
+    public void Interact()
+    {
+        InputManager.instance.SwitchControlTo(boatObject);
+    }
+
+    public void OnPossess()
+    {
+
+    }
+
+    public void OnUnpossess()
+    {
+        
     }
 }
